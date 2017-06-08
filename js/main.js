@@ -3,7 +3,7 @@ window.onerror = function(msg, url, line, col, error) {
    var extra = !col ? '' : '\ncolumn: ' + col;
    extra += !error ? '' : '\nerror: ' + error;
 
-   alert("Error: " + msg + "\nurl: " + url + "\nline: " + line);
+   console.error("Error: " + msg + "\nurl: " + url + "\nline: " + line);
 
    var suppressErrorAlert = true;
    return suppressErrorAlert;
@@ -220,8 +220,8 @@ function buildScreens(){
 		}
 		else {
 			$('body .row').append('<div class="col-xs-5 sortable col1"><div class="auto_switches"></div><div class="auto_dimmers"></div></div>');
-			$('body .row').append('<div class="col-xs-5 sortable"><div class="block_weather containsweatherfull"></div><div class="auto_media"></div><div class="auto_states"></div></div>');
-			$('body .row').append('<div class="col-xs-2 sortable"><div class="auto_clock"></div><div class="auto_sunrise"></div><div class="auto_buttons"></div></div>');
+			$('body .row').append('<div class="col-xs-5 sortable col2"><div class="block_weather containsweatherfull"></div><div class="auto_media"></div><div class="auto_states"></div></div>');
+			$('body .row').append('<div class="col-xs-2 sortable col3"><div class="auto_clock"></div><div class="auto_sunrise"></div><div class="auto_buttons"></div></div>');
 
 			$('.col2').prepend('<div class="mh transbg big block_currentweather_big col-xs-12 containsweather"><div class="col-xs-1"><div class="weather" id="weather"></div></div><div class="col-xs-11"><span class="title weatherdegrees" id="weatherdegrees"></span> <span class="weatherloc" id="weatherloc"></span></div></div>');
 			if(typeof(_APIKEY_WUNDERGROUND)!=='undefined' && _APIKEY_WUNDERGROUND!=="" && typeof(_WEATHER_CITY)!=='undefined' && _WEATHER_CITY!==""){
@@ -277,7 +277,7 @@ function initMap() {
 	},(60000*5));
 }
 function showMap(mapid,map) {
-	if(typeof(_APIKEY_MAPS)=='undefined' || _APIKEY_MAPS=="") alert('Please, set var _APIKEY_MAPS!');
+	if(typeof(_APIKEY_MAPS)=='undefined' || _APIKEY_MAPS=="") console.error('Please, set var _APIKEY_MAPS!');
 	
 	if($('#'+mapid).length>0){
 		if(typeof(map)!=='undefined'){
@@ -339,6 +339,18 @@ if(typeof(_AUTO_SWIPEBACK_TO)!=='undefined' && typeof(_AUTO_SWIPEBACK_TIME)!=='u
 	   },1000);
 		
 	}
+}
+
+//Loop through pages
+if(_SLIDE_PAGES != false && (_AUTO_SWIPEBACK_TIME == 0  || typeof(_AUTO_SWIPEBACK_TIME)== 'undefined') && _SLIDE_PAGES > 4){
+	var nextSlide = 1;
+	setInterval(function(){
+		toSlide(nextSlide);
+		nextSlide++;
+		if(nextSlide > myswiper.slides.length-1){
+			nextSlide = 0;
+		}
+	},(_SLIDE_PAGES * 1000));
 }
 
 //STANDBY FUNCTION
@@ -770,7 +782,7 @@ function getDevices(override){
 			url: _HOST_DOMOTICZ+'/json.htm?type=devices&filter=all&used=true&order=Name&jsoncallback=?',
 			type: 'GET',async: true,contentType: "application/json",dataType: 'jsonp',
 			error: function( jqXHR, textStatus ) {
-				alert("Domoticz error!\nPlease, double check the path in _HOST_DOMOTICZ-variable!");
+				console.error("Domoticz error!\nPlease, double check the path in _HOST_DOMOTICZ-variable!");
 			},
 			success: function(data) {
 				gettingDevices = false;
@@ -1006,15 +1018,17 @@ function getDevices(override){
 									$('div.block_'+idx+'_2').html(html);
 									addHTML=false;
 
-									triggerStatus(idx+'_3',device['LastUpdate'],device);
-									triggerChange(idx+'_3',device['LastUpdate'],device);
-							
-									var title=device['Name'];
-									if(typeof(blocks[idx+'_3'])!=='undefined' && typeof(blocks[idx+'_3']['title'])!=='undefined') title=blocks[idx+'_3']['title'];
-									html= getStateBlock(device['idx']+'c',rfxicon,title,device['Usage'],device);
-									if(typeof(allblocks[idx])!=='undefined' && $('div.block_'+idx+'_3').length==0) var duplicate = $('div.block_'+idx+'_2').last().clone().removeClass('block_'+idx+'_2').addClass('block_'+idx+'_3').insertAfter($('div.block_'+idx+'_2'));
-									$('div.block_'+idx+'_3').html(html);
-									addHTML=false;
+									if(typeof(device['Usage'])!=='undefined'){
+										triggerStatus(idx+'_3',device['LastUpdate'],device);
+										triggerChange(idx+'_3',device['LastUpdate'],device);
+
+										var title=device['Name'];
+										if(typeof(blocks[idx+'_3'])!=='undefined' && typeof(blocks[idx+'_3']['title'])!=='undefined') title=blocks[idx+'_3']['title'];
+										html= getStateBlock(device['idx']+'c',rfxicon,title,device['Usage'],device);
+										if(typeof(allblocks[idx])!=='undefined' && $('div.block_'+idx+'_3').length==0) var duplicate = $('div.block_'+idx+'_2').last().clone().removeClass('block_'+idx+'_2').addClass('block_'+idx+'_3').insertAfter($('div.block_'+idx+'_2'));
+										$('div.block_'+idx+'_3').html(html);
+										addHTML=false;
+									}
 								}
 
 								else if(device['Type']=='General' && device['SubType']=='kWh'){
